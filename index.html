@@ -485,6 +485,7 @@ window.onload = () => {
   } else {
     document.getElementById('apikey-screen').style.display = 'flex';
   }
+  loadMemory();
   buildHexGrid();
   startClock();
   startGlitch();
@@ -697,7 +698,7 @@ async function sendMessage(voiceText) {
 
   try {
     const cleanHistory = messages.slice(0,-1).filter(m => m.role==='user'||m.role==='assistant');
-    const memCtx = getMemoryContext();
+    const memCtx = (typeof getMemoryContext === 'function') ? getMemoryContext() : '';
     const systemWithMemory = memCtx ? SYSTEM_PROMPT + '\n\nCurrent user memory:\n' + memCtx : SYSTEM_PROMPT;
     const res = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -722,9 +723,9 @@ async function sendMessage(voiceText) {
     if (data.content) for (const b of data.content) if (b.type==='text') reply += b.text;
     if (reply) {
       // Parse and store any memory updates
-      parseMemoryUpdates(reply);
+      if (typeof parseMemoryUpdates === 'function') parseMemoryUpdates(reply);
       // Strip memory tags before displaying
-      const cleanReply = stripMemoryTags(reply);
+      const cleanReply = (typeof stripMemoryTags === 'function') ? stripMemoryTags(reply) : reply;
       addMessage('assistant', cleanReply);
       speak(cleanReply, currentLang);
     }
@@ -911,7 +912,7 @@ document.getElementById('msg-input').addEventListener('keydown', function(e) {
 window._searchEnabled = true;
 
 
- {
+
 // ── File / Document Analysis ──────────────────────────────────────────────────
 let pendingFiles = []; // [{name, size, type, base64, mediaType}]
 
@@ -1107,8 +1108,7 @@ function toggleSearch() {
   }
 }
 
-// Init memory on load
-document.addEventListener('DOMContentLoaded', loadMemory);
+// Memory loaded via window.onload below
 
 // ── Web Dev Engine ────────────────────────────────────────────────────────────
 let wdProjects = []; // [{filename, title, type, code}]

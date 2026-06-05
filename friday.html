@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>F.R.I.D.A.Y. — Vadim Industries</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --gold:  #c9a84c;
+  --gold2: #f0d080;
+  --gold3: #7a5c1e;
+  --bg:    #040300;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  overflow: hidden;
+  background: var(--bg);
+  font-family: 'Share Tech Mono', monospace;
+  color: var(--gold);
+  touch-action: none;
+  user-select: none;
+}
+
+/* ── ONBOARDING ── */
+#onboard {
+  position: fixed; inset: 0;
+  background: var(--bg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  z-index: 200;
+  padding: 36px;
+}
+#onboard h1 {
+  font-family: 'Orbitron', sans-serif;
+  font-size: clamp(20px, 5vw, 32px);
+  font-weight: 900;
+  letter-spacing: .45em;
+  color: var(--gold);
+  text-shadow: 0 0 32px rgba(201,168,76,.45);
+}
+#onboard .sub {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 8px;
+  letter-spacing: .35em;
+  color: var(--gold3);
+}
+#onboard p {
+  font-size: 12px;
+  color: rgba(201,168,76,.38);
+  letter-spacing: .07em;
+  text-align: center;
+  line-height: 2;
+  max-width: 320px;
+}
+#onboard a { color: var(--gold); }
+#key-input {
+  width: 100%; max-width: 320px;
+  background: rgba(201,168,76,.04);
+  border: 1px solid rgba(201,168,76,.18);
+  color: var(--gold2);
+  padding: 13px 16px;
+  border-radius: 6px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px;
+  outline: none;
+}
+#key-input::placeholder { color: rgba(201,168,76,.16); }
+#key-btn {
+  width: 100%; max-width: 320px;
+  background: rgba(201,168,76,.07);
+  border: 1px solid rgba(201,168,76,.28);
+  color: var(--gold);
+  padding: 15px;
+  border-radius: 6px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .25em;
+  cursor: pointer;
+  transition: background .2s;
+}
+#key-btn:hover { background: rgba(201,168,76,.14); }
+#key-err { font-size: 11px; color: #cc4444; display: none; }
+
+/* ── SCENE ── */
+#scene {
+  display: none;
+  position: fixed; inset: 0;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+canvas#stars {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+}
+
+/* HUD */
+.hud {
+  position: fixed;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: .18em;
+  color: rgba(201,168,76,.22);
+  z-index: 10;
+  line-height: 2;
+}
+#hud-tl { top: 16px; left: 18px; }
+#hud-tr { top: 16px; right: 18px; text-align: right; }
+#hud-bl { bottom: 16px; left: 18px; }
+#hud-br { bottom: 16px; right: 18px; text-align: right; }
+#hud-clock { font-size: 12px; color: rgba(201,168,76,.4); letter-spacing: .14em; }
+
+/* ── SPHERE ── */
+#sphere-wrap {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: min(55vw, 55vh, 320px);
+  height: min(55vw, 55vh, 320px);
+}
+
+.orbit {
+  position: absolute;
+  border-radius: 50%;
+  border: 1px solid;
+  pointer-events: none;
+}
+.orbit-1 {
+  inset: -30px;
+  border-color: rgba(201,168,76,.09);
+  border-style: dashed;
+  animation: spin 30s linear infinite;
+}
+.orbit-2 {
+  inset: -16px;
+  border-color: rgba(201,168,76,.06);
+  animation: spin 18s linear infinite reverse;
+}
+
+.odot {
+  position: absolute;
+  border-radius: 50%;
+  top: 50%; left: 50%;
+  pointer-events: none;
+}
+#dA { width:5px;height:5px; background:var(--gold); box-shadow:0 0 7px var(--gold); }
+#dB { width:3px;height:3px; background:var(--gold3); }
+
+#glow {
+  position: absolute; inset: -6px;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+  transition: box-shadow .5s ease;
+}
+
+canvas#sph {
+  width:100%;height:100%;
+  border-radius:50%;
+  position:relative;z-index:2;display:block;
+}
+
+/* ── LABEL ── */
+#slabel {
+  position: relative; z-index: 5;
+  margin-top: 34px;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 9px; font-weight: 700;
+  letter-spacing: .38em;
+  color: rgba(201,168,76,.35);
+  text-align: center;
+  transition: color .4s, text-shadow .4s;
+  min-height: 14px;
+}
+
+/* ── SPEECH ── */
+#speech {
+  position: fixed;
+  bottom: 60px; left: 50%; transform: translateX(-50%);
+  z-index: 10;
+  width: min(90vw, 520px);
+  text-align: center;
+  pointer-events: none;
+}
+#uecho {
+  font-size: 11px;
+  color: rgba(201,168,76,.3);
+  font-style: italic;
+  letter-spacing: .05em;
+  margin-bottom: 9px;
+  opacity: 0; transition: opacity .3s;
+  min-height: 16px;
+}
+#uecho.v { opacity:1; }
+#ftext {
+  font-size: clamp(13px,2.2vw,15px);
+  color: rgba(240,208,128,.82);
+  line-height: 1.85;
+  letter-spacing: .04em;
+  opacity: 0; transform: translateY(10px);
+  transition: opacity .4s ease, transform .4s ease;
+}
+#ftext.v { opacity:1; transform:translateY(0); }
+
+/* ── WAVE BARS ── */
+#wave {
+  position: fixed; bottom:0; left:0; right:0;
+  height: 50px; z-index:4; pointer-events:none;
+  display:flex; align-items:flex-end; justify-content:center;
+  gap:3px; padding-bottom:5px;
+  opacity:0; transition:opacity .4s;
+}
+#wave.on { opacity:1; }
+.vb {
+  width:3px; border-radius:2px 2px 0 0;
+  background: linear-gradient(to top, var(--gold3), var(--gold));
+  transform-origin:bottom; transform:scaleY(.12);
+}
+
+/* ── MIC INDICATOR ── */
+#mic-ring {
+  position: fixed;
+  bottom: 60px; left: 50%; transform: translateX(-50%);
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 10px var(--gold);
+  z-index: 15;
+  opacity: 0;
+  transition: opacity .3s;
+}
+#mic-ring.on { opacity: 1; }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes vbp { 0%,100%{transform:scaleY(.1)} 50%{transform:scaleY(1)} }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.1} }
+
+::-webkit-scrollbar { width: 0; }
+</style>
+</head>
+<body>
+
+<!-- ONBOARDING -->
+<div id="onboard">
+  <h1>F.R.I.D.A.Y.</h1>
+  <div class="sub">VADIM INDUSTRIES · AI CORE</div>
+  <p>
+    Inserisci la tua API key di Anthropic.<br>
+    <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a> → API Keys
+  </p>
+  <input id="key-input" type="password" placeholder="sk-ant-..." />
+  <div id="key-err">⚠ Chiave non valida</div>
+  <button id="key-btn" onclick="boot()">⚡ ATTIVA SISTEMA</button>
+</div>
+
+<!-- SCENE -->
+<div id="scene">
+  <canvas id="stars"></canvas>
+
+  <div class="hud" id="hud-tl">VADIM INDUSTRIES<br>FRIDAY v4.1</div>
+  <div class="hud" id="hud-tr"><div id="hud-clock">--:--:--</div>NEURAL LINK</div>
+  <div class="hud" id="hud-bl">VOICE <span id="hvoc" style="color:rgba(201,168,76,.5)">ON</span></div>
+  <div class="hud" id="hud-br">MEM <span id="hmem">0</span></div>
+
+  <div id="sphere-wrap">
+    <div class="orbit orbit-1"></div>
+    <div class="orbit orbit-2"></div>
+    <div id="dA" class="odot"></div>
+    <div id="dB" class="odot"></div>
+    <div id="glow"></div>
+    <canvas id="sph"></canvas>
+  </div>
+
+  <div id="slabel">AVVIO…</div>
+
+  <div id="speech">
+    <div id="uecho"></div>
+    <div id="ftext"></div>
+  </div>
+
+  <div id="wave"></div>
+  <div id="mic-ring"></div>
+</div>
+
+<script>
+// ═══════════════════════
+// SYSTEM PROMPT
+// ═══════════════════════
+const SYSTEM = `Sei F.R.I.D.A.Y., l'assistente AI personale di Vadim, creata da Vadim Industries.
+
+LINGUA: Rispondi SEMPRE nella stessa lingua dell'utente. Italiano→Italiano, Inglese→Inglese.
+
+INTERFACCIA VOCALE SEMPRE ATTIVA: Non hai un pulsante — ascolti continuamente come Siri o Alexa. Parla in modo naturale, umano, conciso. Niente elenchi, niente markdown, niente formattazione. Sei come una persona che parla.
+
+PERSONALITÀ: Sei calda, intelligente, leggermente ironica. Chiami l'utente "Vadim" o a volte "Boss". Sei la sua assistente personale, non un chatbot generico.
+
+COMANDI VOCALI — riconosci e agisci su:
+- "disattiva voce" / "silenziati" / "muto" → smetti di parlare, aggiungi <VOICE_OFF/>
+- "attiva voce" / "parla" → riattiva voce, aggiungi <VOICE_ON/>  
+- "cancella memoria" / "dimentica tutto" → cancella, aggiungi <CLEAR_MEMORY/>
+- "cosa ricordi" / "cosa sai di me" → racconta la memoria in modo naturale
+
+MEMORIA: Quando impari qualcosa di importante su Vadim, aggiungi in fondo:
+<REMEMBER>chiave: valore</REMEMBER>
+Solo fatti davvero persistenti. Uno per messaggio.
+
+WEB SEARCH: Usa la ricerca per notizie, meteo, prezzi, eventi attuali. Cita naturalmente.`;
+
+// ═══════════════════════
+// STATE
+// ═══════════════════════
+let apiKey = '', memory = {}, history = [], voiceOn = true;
+let cur = 'idle'; // idle | listening | thinking | speaking
+let recognition = null;
+let isListening = false;
+let listenLoop = null;
+let fridayBusy = false; // true when thinking or speaking
+
+// ═══════════════════════
+// BOOT
+// ═══════════════════════
+window.onload = () => {
+  apiKey = localStorage.getItem('fri_key') || '';
+  if (apiKey.length > 20) launch();
+};
+document.getElementById('key-input').addEventListener('keydown', e => { if (e.key==='Enter') boot(); });
+
+function boot() {
+  const v = document.getElementById('key-input').value.trim();
+  if (v.length < 20) { document.getElementById('key-err').style.display='block'; return; }
+  localStorage.setItem('fri_key', v);
+  apiKey = v;
+  document.getElementById('onboard').style.display = 'none';
+  launch();
+}
+
+function launch() {
+  loadMem();
+  document.getElementById('scene').style.display = 'flex';
+  initStars(); initSphere(); initWave(); initDots(); startClock();
+  initSR();
+
+  if (window.speechSynthesis) {
+    speechSynthesis.getVoices();
+    speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
+  }
+
+  // Friday greets immediately, then starts listening loop
+  setTimeout(() => {
+    greet();
+  }, 600);
+}
+
+// ═══════════════════════
+// GREET + START LOOP
+// ═══════════════════════
+function greet() {
+  setState('speaking');
+  const msg = 'Ciao Vadim! Sono Friday, il tuo assistente personale. Come posso aiutarti oggi?';
+  showFtext(msg);
+  fridayBusy = true;
+  speak(msg, 'it-IT', () => {
+    fridayBusy = false;
+    startListenLoop();
+  });
+}
+
+// ═══════════════════════
+// CONTINUOUS LISTEN LOOP
+// ═══════════════════════
+// After Friday finishes speaking, automatically start listening.
+// When user speaks → process → Friday replies → listen again.
+
+function startListenLoop() {
+  if (fridayBusy) return;
+  setState('idle');
+  setTimeout(() => {
+    if (!fridayBusy) beginListening();
+  }, 400);
+}
+
+function beginListening() {
+  if (fridayBusy || !recognition) return;
+  setState('listening');
+  document.getElementById('mic-ring').classList.add('on');
+  try {
+    recognition.abort();
+  } catch(e) {}
+  setTimeout(() => {
+    try { recognition.start(); } catch(e) {}
+  }, 80);
+}
+
+function stopListening() {
+  document.getElementById('mic-ring').classList.remove('on');
+  try { recognition.stop(); } catch(e) {}
+}
+
+// ═══════════════════════
+// SPEECH RECOGNITION
+// ═══════════════════════
+function initSR() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { showFtext('Microfono non supportato su questo browser. Usa Chrome.'); return; }
+
+  recognition = new SR();
+  recognition.continuous = false;
+  recognition.interimResults = true;
+  recognition.lang = 'it-IT';
+
+  recognition.onresult = (e) => {
+    let interim = '', final = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) final += e.results[i][0].transcript;
+      else interim += e.results[i][0].transcript;
+    }
+    if (interim) showEcho(interim + '…');
+    if (final) {
+      showEcho(final);
+      stopListening();
+      sendToFriday(final);
+    }
+  };
+
+  recognition.onerror = (e) => {
+    // no-input / aborted → just restart
+    if (e.error === 'no-speech' || e.error === 'aborted') {
+      if (!fridayBusy) startListenLoop();
+      return;
+    }
+    // network/not-allowed → show error
+    console.warn('SR error:', e.error);
+    if (!fridayBusy) startListenLoop();
+  };
+
+  recognition.onend = () => {
+    document.getElementById('mic-ring').classList.remove('on');
+    if (!fridayBusy) {
+      // restart after a moment if no result came
+      setTimeout(() => {
+        if (!fridayBusy) startListenLoop();
+      }, 300);
+    }
+  };
+}
+
+// ═══════════════════════
+// API CALL
+// ═══════════════════════
+async function sendToFriday(text) {
+  if (!text.trim()) { startListenLoop(); return; }
+  fridayBusy = true;
+  setState('thinking');
+
+  const lang = detectLang(text);
+  const ctx = memCtx();
+  const sys = SYSTEM + (ctx ? '\n\nMemoria utente:\n' + ctx : '');
+  history.push({ role: 'user', content: text });
+  if (history.length > 20) history = history.slice(-20);
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-haiku-4-5',
+        max_tokens: 600,
+        system: sys,
+        tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+        messages: history
+      })
+    });
+
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+
+    let reply = '';
+    (data.content || []).forEach(c => { if (c.type === 'text') reply += c.text; });
+
+    if (reply) {
+      // Voice commands
+      if (reply.includes('<VOICE_OFF/>')) setVoice(false);
+      if (reply.includes('<VOICE_ON/>'))  setVoice(true);
+      if (reply.includes('<CLEAR_MEMORY/>')) { memory = {}; saveMem(); }
+
+      parseMem(reply);
+      const clean = strip(reply);
+      history.push({ role: 'assistant', content: clean });
+      showFtext(clean);
+
+      setState('speaking');
+      speak(clean, lang, () => {
+        fridayBusy = false;
+        startListenLoop(); // auto-restart listening after reply
+      });
+    } else {
+      fridayBusy = false;
+      startListenLoop();
+    }
+  } catch(err) {
+    const msg = 'Scusa Vadim, c\'è un problema di connessione. Riprovo subito.';
+    showFtext(msg);
+    speak(msg, 'it-IT', () => {
+      fridayBusy = false;
+      startListenLoop();
+    });
+  }
+}
+
+// ═══════════════════════
+// TTS
+// ═══════════════════════
+function speak(text, lang, onEnd) {
+  if (!voiceOn || !window.speechSynthesis) {
+    setState('idle');
+    if (onEnd) onEnd();
+    return;
+  }
+  speechSynthesis.cancel();
+
+  const clean = text.replace(/[*_#`~]/g, '').replace(/F\.R\.I\.D\.A\.Y\./g, 'Friday').substring(0, 700);
+  const utt = new SpeechSynthesisUtterance(clean);
+  utt.lang = lang || 'it-IT';
+  utt.rate = 0.87;
+  utt.pitch = 1.1;
+
+  const voices = speechSynthesis.getVoices();
+  const lc = utt.lang.split('-')[0];
+  const pick = voices.find(v => v.lang === utt.lang && /female|alice|fiona|karen|monica|silvia|amelie/i.test(v.name))
+             || voices.find(v => v.lang.startsWith(lc));
+  if (pick) utt.voice = pick;
+
+  utt.onstart = () => setState('speaking');
+  utt.onend   = () => { setState('idle'); if (onEnd) onEnd(); };
+  utt.onerror = () => { setState('idle'); if (onEnd) onEnd(); };
+
+  setState('speaking');
+  speechSynthesis.speak(utt);
+}
+
+function setVoice(on) {
+  voiceOn = on;
+  document.getElementById('hvoc').textContent = on ? 'ON' : 'OFF';
+  document.getElementById('hvoc').style.color = on ? 'rgba(201,168,76,.5)' : 'rgba(201,168,76,.15)';
+  if (!on) speechSynthesis.cancel();
+}
+
+// ═══════════════════════
+// STATE
+// ═══════════════════════
+function setState(s) {
+  cur = s;
+  const map = {
+    idle:      ['IN ATTESA',     'rgba(201,168,76,.3)',  'none'],
+    listening: ['IN ASCOLTO',    'rgba(201,168,76,.85)', '0 0 18px rgba(201,168,76,.45)'],
+    thinking:  ['ELABORAZIONE',  'rgba(201,168,76,.55)', '0 0 14px rgba(201,168,76,.3)'],
+    speaking:  ['FRIDAY PARLA',  'rgba(201,168,76,1)',   '0 0 22px rgba(201,168,76,.55)']
+  };
+  const [label, color, shadow] = map[s];
+  const el = document.getElementById('slabel');
+  el.textContent = label;
+  el.style.color = color;
+  el.style.textShadow = shadow;
+  animWave(s === 'speaking');
+}
+
+// ═══════════════════════
+// SPHERE CANVAS
+// ═══════════════════════
+function initSphere() {
+  const canvas = document.getElementById('sph');
+  const ctx = canvas.getContext('2d');
+
+  function resize() {
+    const r = canvas.parentElement.getBoundingClientRect();
+    canvas.width = r.width; canvas.height = r.height;
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  let t = 0, phase = 0, intensity = .35;
+
+  function draw() {
+    const W = canvas.width, H = canvas.height;
+    const cx = W/2, cy = H/2, R = Math.min(W,H)/2 - 3;
+    ctx.clearRect(0, 0, W, H);
+    t += .016;
+
+    const sp = cur==='idle' ? .005 : cur==='listening' ? .02 : cur==='thinking' ? .04 : .07;
+    phase += sp;
+
+    const tgt = cur==='idle'      ? .3 + Math.sin(phase)*.1
+              : cur==='listening' ? .68 + Math.sin(phase*2.8)*.22
+              : cur==='thinking'  ? .48 + Math.abs(Math.sin(phase*4.5))*.38
+              :                     .82 + Math.sin(phase*10)*.14;
+    intensity += (tgt - intensity) * .052;
+    const a = intensity;
+
+    // ambient
+    const og = ctx.createRadialGradient(cx,cy,R*.4,cx,cy,R*1.7);
+    og.addColorStop(0, `rgba(201,168,76,${a*.07})`);
+    og.addColorStop(1, 'transparent');
+    ctx.beginPath(); ctx.arc(cx,cy,R*1.7,0,Math.PI*2);
+    ctx.fillStyle=og; ctx.fill();
+
+    // sphere
+    const sg = ctx.createRadialGradient(cx-R*.27,cy-R*.27,0,cx,cy,R);
+    sg.addColorStop(0,  `rgba(240,208,128,${a*.52})`);
+    sg.addColorStop(.22,`rgba(201,168,76,${a*.28})`);
+    sg.addColorStop(.62,`rgba(50,32,4,${.88})`);
+    sg.addColorStop(1,  `rgba(4,3,0,${.97})`);
+    ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2);
+    ctx.fillStyle=sg; ctx.fill();
+
+    // border
+    ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(201,168,76,${a*.65})`; ctx.lineWidth=1.5; ctx.stroke();
+
+    // inner ring
+    ctx.beginPath(); ctx.arc(cx,cy,R*.78,0,Math.PI*2);
+    ctx.strokeStyle=`rgba(201,168,76,${a*.15})`; ctx.lineWidth=.5; ctx.stroke();
+
+    // hex
+    hex(ctx,cx,cy,R*.35,`rgba(201,168,76,${a*.36})`,.8);
+    hex(ctx,cx,cy,R*.21,`rgba(201,168,76,${a*.52})`,.5);
+
+    // thinking spinner
+    if (cur==='thinking') {
+      ctx.save(); ctx.translate(cx,cy); ctx.rotate(t*2.4);
+      arcP(ctx,0,0,R*.56,0,Math.PI*1.45,`rgba(201,168,76,${a*.78})`,1.5);
+      ctx.restore();
+      ctx.save(); ctx.translate(cx,cy); ctx.rotate(-t*1.5);
+      arcP(ctx,0,0,R*.42,0,Math.PI*.9,`rgba(201,168,76,${a*.5})`,.8);
+      ctx.restore();
+    }
+
+    // listening pulse rings
+    if (cur==='listening') {
+      for (let k=1;k<=3;k++) {
+        const wR = R*(.72+k*.12)+Math.sin(phase*2.8+k*1.1)*R*.05;
+        ctx.beginPath(); ctx.arc(cx,cy,wR,0,Math.PI*2);
+        ctx.strokeStyle=`rgba(201,168,76,${a*(.2-k*.05)})`; ctx.lineWidth=.7; ctx.stroke();
+      }
+    }
+
+    // speaking equator wave
+    if (cur==='speaking') {
+      ctx.save();
+      ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.clip();
+      ctx.beginPath();
+      const N=52;
+      for (let i=0;i<=N;i++) {
+        const ang=(i/N)*Math.PI*2;
+        const amp=R*.075*a;
+        const wR=R+Math.sin(ang*7+t*9)*amp*Math.abs(Math.sin(phase));
+        const px=cx+Math.cos(ang)*wR, py=cy+Math.sin(ang)*wR;
+        i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+      }
+      ctx.closePath();
+      ctx.strokeStyle=`rgba(240,208,128,${a*.3})`; ctx.lineWidth=1.4; ctx.stroke();
+      ctx.restore();
+    }
+
+    // specular
+    const sg2=ctx.createRadialGradient(cx-R*.3,cy-R*.32,0,cx-R*.18,cy-R*.2,R*.42);
+    sg2.addColorStop(0,`rgba(255,240,180,${a*.2})`); sg2.addColorStop(1,'transparent');
+    ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2);
+    ctx.fillStyle=sg2; ctx.fill();
+
+    // glow
+    document.getElementById('glow').style.boxShadow =
+      `0 0 ${38+a*65}px ${8+a*26}px rgba(201,168,76,${a*.13})`;
+
+    requestAnimationFrame(draw);
+  }
+
+  function hex(ctx,cx,cy,r,color,lw) {
+    ctx.beginPath();
+    for (let i=0;i<6;i++) {
+      const a=(Math.PI/3)*i-Math.PI/6;
+      i===0?ctx.moveTo(cx+r*Math.cos(a),cy+r*Math.sin(a)):ctx.lineTo(cx+r*Math.cos(a),cy+r*Math.sin(a));
+    }
+    ctx.closePath(); ctx.strokeStyle=color; ctx.lineWidth=lw; ctx.stroke();
+  }
+
+  function arcP(ctx,cx,cy,r,s,e,color,lw) {
+    ctx.beginPath(); ctx.arc(cx,cy,r,s,e);
+    ctx.strokeStyle=color; ctx.lineWidth=lw; ctx.stroke();
+  }
+
+  draw();
+}
+
+// ═══════════════════════
+// ORBIT DOTS
+// ═══════════════════════
+function initDots() {
+  const dA=document.getElementById('dA'), dB=document.getElementById('dB');
+  let a=0;
+  function tick() {
+    a+=.009;
+    const w=document.getElementById('sphere-wrap').getBoundingClientRect();
+    const RA=w.width/2+23, RB=w.width/2+13;
+    dA.style.transform=`translate(${Math.cos(a)*RA-2.5}px,${Math.sin(a)*RA-2.5}px)`;
+    dB.style.transform=`translate(${Math.cos(a+Math.PI*.7)*RB-1.5}px,${Math.sin(a+Math.PI*.7)*RB-1.5}px)`;
+    requestAnimationFrame(tick);
+  }
+  tick();
+}
+
+// ═══════════════════════
+// STARS
+// ═══════════════════════
+function initStars() {
+  const c=document.getElementById('stars'), ctx=c.getContext('2d');
+  let W,H,stars=[];
+  function resize() {
+    W=c.width=window.innerWidth; H=c.height=window.innerHeight;
+    stars=Array.from({length:80},()=>({x:Math.random()*W,y:Math.random()*H,r:Math.random()*.8+.1,a:Math.random(),sp:Math.random()*.2+.04}));
+  }
+  function draw() {
+    ctx.clearRect(0,0,W,H);
+    stars.forEach(s=>{
+      s.a+=s.sp*.007; if(s.a>1)s.a=0;
+      ctx.beginPath(); ctx.arc(s.x,s.y,s.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(201,168,76,${s.a*.28})`; ctx.fill();
+    });
+    requestAnimationFrame(draw);
+  }
+  resize(); window.addEventListener('resize',resize); draw();
+}
+
+// ═══════════════════════
+// WAVE BARS
+// ═══════════════════════
+function initWave() {
+  const w=document.getElementById('wave');
+  for(let i=0;i<34;i++){
+    const b=document.createElement('div'); b.className='vb';
+    b.style.height=(5+Math.random()*30)+'px'; w.appendChild(b);
+  }
+}
+function animWave(on) {
+  document.querySelectorAll('.vb').forEach((b,i)=>{
+    b.style.animation=on?`vbp ${(.2+Math.random()*.5).toFixed(2)}s ease-in-out ${(i*.03).toFixed(2)}s infinite`:'none';
+    if(!on) b.style.transform='scaleY(.12)';
+  });
+  document.getElementById('wave').classList.toggle('on',on);
+}
+
+// ═══════════════════════
+// CLOCK
+// ═══════════════════════
+function startClock() {
+  setInterval(()=>{
+    document.getElementById('hud-clock').textContent=
+      new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false});
+  },1000);
+}
+
+// ═══════════════════════
+// UI
+// ═══════════════════════
+function showFtext(t) {
+  const el=document.getElementById('ftext');
+  el.classList.remove('v'); void el.offsetWidth;
+  el.textContent=t; if(t) el.classList.add('v');
+}
+function showEcho(t) {
+  const el=document.getElementById('uecho');
+  el.textContent=t?`"${t}"`:''; el.classList.toggle('v',!!t);
+}
+
+// ═══════════════════════
+// LANG DETECT
+// ═══════════════════════
+function detectLang(text) {
+  if(/\b(il|la|le|gli|che|non|per|con|sono|hai|ciao|grazie|come|cosa|ho|mi|ti|puoi|dimmi|voglio|quando|dove|perché)\b/i.test(text)) return 'it-IT';
+  if(/\b(el|los|las|que|no|por|hola|gracias|quiero|como)\b/i.test(text)) return 'es-ES';
+  if(/\b(le|les|pas|pour|avec|bonjour|merci|je|tu|nous)\b/i.test(text)) return 'fr-FR';
+  if(/\b(der|die|das|nicht|für|ist|bitte|danke|ich|du)\b/i.test(text)) return 'de-DE';
+  return 'en-US';
+}
+
+// ═══════════════════════
+// MEMORY
+// ═══════════════════════
+function loadMem() {
+  try { memory=JSON.parse(localStorage.getItem('fri_mem')||'{}'); } catch(e){ memory={}; }
+  document.getElementById('hmem').textContent=Object.keys(memory).length;
+}
+function saveMem() {
+  localStorage.setItem('fri_mem',JSON.stringify(memory));
+  document.getElementById('hmem').textContent=Object.keys(memory).length;
+}
+function memCtx() {
+  const k=Object.keys(memory);
+  return k.length?k.map(k=>`${k}: ${memory[k]}`).join('\n'):'';
+}
+function parseMem(text) {
+  const re=/<REMEMBER>(.*?)<\/REMEMBER>/g; let m,ch=false;
+  while((m=re.exec(text))!==null){
+    const p=m[1].split(':');
+    if(p.length>=2){ memory[p[0].trim().toLowerCase()]=p.slice(1).join(':').trim(); ch=true; }
+  }
+  if(ch) saveMem();
+}
+function strip(text) {
+  return text
+    .replace(/<REMEMBER>.*?<\/REMEMBER>/g,'')
+    .replace(/<VOICE_OFF\/>/g,'').replace(/<VOICE_ON\/>/g,'')
+    .replace(/<CLEAR_MEMORY\/>/g,'').trim();
+}
+</script>
+</body>
+</html>
